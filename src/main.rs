@@ -12,24 +12,22 @@ struct Config {
 async fn index() -> Result<impl Responder> {
     let mut envvars = vec![];
 
-    for (n,_) in env::vars() {
-        if n.starts_with("XDG_") {
-            let (_, value) = n.split_once("_").unwrap();
-            envvars.push(Config{name: value.to_string(), enabled: true});
+    for (n,v) in env::vars() {
+        if n.starts_with("O_") {
+            envvars.push(Config{name: v.to_string(), enabled: true});
+        } else if n.starts_with("X_") {
+            envvars.push(Config{name: v.to_string(), enabled: false});
         };
     };
-
     Ok(web::Json(envvars))
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     use actix_web::{App, HttpServer};
-
-    println!("HUBBABUBBA GOES UUUUP");
-
+    println!("Starting Flapper");
     HttpServer::new(|| App::new().service(index))
-        .bind(("127.0.0.1", 8080))?
+        .bind(("0.0.0.0", 8080))?
         .run()
         .await
 }

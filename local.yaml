@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  flapper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: flapper_local
+    container_name: flapper_local
+    environment:
+      O_VARIABLE_1: "bird"
+      X_VARIABLE_2: "dolphin"
+      O_VARIABLE_3: "bird.dolphin"
+    ports:
+      - "8080:8080"
+
