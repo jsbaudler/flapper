@@ -8,6 +8,7 @@ services:
     image: flapper_local
     container_name: flapper_local
     environment:
+      PATH_PREFIX: "/flipper/"
       O_VARIABLE_1: "bird"
       X_VARIABLE_2: "dolphin"
       O_VARIABLE_3: "bird.dolphin"
