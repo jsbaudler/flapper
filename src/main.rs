@@ -13,11 +13,15 @@ async fn index() -> Result<impl Responder> {
     let mut envvars = vec![];
 
     for (n,v) in env::vars() {
-        if n.starts_with("O_") {
-            envvars.push(Config{name: v.to_string(), enabled: true});
-        } else if n.starts_with("X_") {
-            envvars.push(Config{name: v.to_string(), enabled: false});
-        };
+        
+        let start = &n[..2];
+
+        match start {
+            "O_" => envvars.push(Config{name: v.to_string(), enabled: true}),
+            "X_" => envvars.push(Config{name: v.to_string(), enabled: false}),
+            &_ => (),
+        }
+
     };
     Ok(web::Json(envvars))
 }
@@ -31,7 +35,7 @@ async fn main() -> std::io::Result<()> {
 
     // print out some basic info about the server
     println!("Starting Flapper");
-    println!("Serving at prefix: 0.0.0.0:8080{}", prefix);
+    println!("Serving at prefix: 0.0.0.0:8080{prefix}");
 
     // start server
     HttpServer::new(move || App::new().service(web::resource(&prefix).to(index)))
