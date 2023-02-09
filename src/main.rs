@@ -1,4 +1,4 @@
-use actix_web::{web, Responder, Result};
+use actix_web::{get, web, HttpResponse, Responder, Result};
 use serde::Serialize;
 use std::env;
 
@@ -8,8 +8,14 @@ struct Config {
     enabled: bool,
 }
 
+#[get("/version")]
+async fn version() -> impl Responder {
+    let version = env::var("FLAPPER_VERSION").unwrap_or("dev".to_string());
+    HttpResponse::Ok().body(version.to_string())
+}
+
 // create the JSON response
-async fn index() -> Result<impl Responder> {
+async fn publish_envvars() -> Result<impl Responder> {
     let mut envvars = vec![];
 
     for (n,v) in env::vars() {
@@ -35,11 +41,15 @@ async fn main() -> std::io::Result<()> {
 
     // print out some basic info about the server
     println!("Starting Flapper");
-    println!("Serving at prefix: 0.0.0.0:8080{prefix}");
+    println!("Serving at 0.0.0.0:8080{prefix}");
 
     // start server
-    HttpServer::new(move || App::new().service(web::resource(&prefix).to(index)))
-        .bind(("0.0.0.0", 8080))?
-        .run()
-        .await
+    HttpServer::new(move || {
+        App::new()
+        .service(web::resource(&prefix).to(publish_envvars))
+        .service(version)
+    })
+    .bind(("0.0.0.0", 8080))?
+    .run()
+    .await
 }

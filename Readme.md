@@ -34,7 +34,9 @@ services:
     ports:
       - "8080:8080"
 ```
-this leads to
+
+leads to
+
 ```JSON
 [
   {
