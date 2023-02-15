@@ -1,8 +1,10 @@
-use actix_web::{get, web, HttpResponse, Responder, Result};
+use actix_web::{get, web, App, HttpServer, Responder, Result};
 use serde::Serialize;
+use serde_json::Value;
+use std::collections::HashMap;
 use std::env;
-
-mod db;
+use std::fs;
+use std::path::Path;
 
 #[derive(Serialize)]
 struct Config {
@@ -10,10 +12,36 @@ struct Config {
     enabled: bool,
 }
 
+// expose version and flapper version
 #[get("/version")]
-async fn version() -> impl Responder {
-    let version = env::var("FLAPPER_VERSION").unwrap_or_else(|_| "dev".to_string());
-    HttpResponse::Ok().body(version)
+async fn version() -> Result<impl Responder> {
+
+    // env vars
+    let flapper_version =
+        env::var("FLAPPER_VERSION").unwrap_or_else(|_| "0.0.0-dev (not set)".to_string());
+    let version_file_path = env::var("VERSION_PATH").unwrap_or_else(|_| "example.json".to_string());
+
+    // prepare flapper version
+    let flapper_version = serde_json::to_value(flapper_version).unwrap();
+    let mut flapper_version: HashMap<String, Value> =
+        HashMap::from([("flapper_version".to_string(), flapper_version)]);
+
+    if Path::new(&version_file_path).exists() {
+
+        // read and consume version file
+        let version_file = fs::read_to_string(version_file_path).unwrap();
+        serde_json::to_string(&version_file).unwrap();
+        let version: HashMap<String, Value> = serde_json::from_str(&version_file).unwrap();
+
+        // combine
+        flapper_version.extend(version);
+    } else {
+        println!("Version File not Found: {}", version_file_path)
+    }
+
+
+
+    Ok(web::Json(flapper_version))
 }
 
 // expose environment vars
@@ -40,18 +68,8 @@ async fn publish_envvars() -> Result<impl Responder> {
     Ok(web::Json(envvars))
 }
 
-// expose db in a raw manner as dictionary
-#[get("/db/raw")]
-async fn publish_database() -> Result<impl Responder> {
-    // call and unwrap db
-    let databases = db::main();
-    Ok(web::Json(databases))
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    use actix_web::{App, HttpServer};
-
     // read env var for path
     let prefix = env::var("PATH_PREFIX").unwrap_or_else(|_| "/".to_string());
 
@@ -64,7 +82,6 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .service(web::resource(&prefix).to(publish_envvars))
             .service(version)
-            .service(publish_database)
     })
     .bind(("0.0.0.0", 8080))?
     .run()

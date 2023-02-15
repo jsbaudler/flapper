@@ -5,7 +5,7 @@
 Flapper is a small tool to expose variables for dev environments with mocking as main purpose.
 
 - It can expose environment variables under a configurable path prefix.
-- It can expose whole databases under a configurable path prefix.
+- It can expose a version file under `/version`.
 
 ## How to use
 
@@ -13,6 +13,10 @@ Flapper is a small tool to expose variables for dev environments with mocking as
 It must be configured via environment variables. Due to some limitations which require to allow non-conform ENV_VARS, the environment variables have to be set in a specific way where ```<ACTIVE_FLAG>_<NAME>="<internal_name>"```. The convention for that ENV strings may look weird, but it is made in that way to allow non-conform env vars set as keys.
 
 You can furthermore configure the a prefix under which the JSON is exposed via ```PATH_PREFIX```. The prefix defaults to ```"/"```.
+
+For running it locally you have to have cargo installed.
+
+After installing it you can run the server via `cargo run`. With `cargo build --release` you can compile a executable for your operating system.
 
 **Example**
 You can run a local deployment of the server to check out it's behaviour. To do this you need to have a docker compatible container engine and docker-compose installed.
@@ -32,6 +36,7 @@ services:
     image: flapper_local
     container_name: flapper_local
     environment:
+      FLAPPER_VERSION: "docker-dev (not set)"
       PATH_PREFIX: "/flipper/"
       O_VARIABLE_1: "bird"
       X_VARIABLE_2: "dolphin"
@@ -40,8 +45,9 @@ services:
       - "8080:8080"
 ```
 
-leads to
+creates:
 
+`localhost:8080/flipper`
 ```JSON
 [
   {
@@ -59,24 +65,11 @@ leads to
 ]
 ```
 
-### Database
-Flapper exposes all **SQLite3** databases which it finds under the subfolder `dbs/` under the path prefix `/db/raw/`.
-
-The data is exposed as JSON and independent of it's datatype as string in the following format:
-
+`localhost:8080/version`
 ```JSON
 {
-  "<Database_Path>":
-  {
-    "<Table>":
-    {
-      "<Column>": ["<Data1>","<Data2>"]
-    },
-    "<Table>":
-    {
-      "<Column>": ["<Data1>","<Data2>"],
-      "<Column>": ["<Data1>","<Data2>"]
-    }
-  }
+  "flapper_version":"0.0.0-dev (not set)",
+  "build_date":"2023/12/24",
+  "program_version":"v1.0.0"
 }
 ```

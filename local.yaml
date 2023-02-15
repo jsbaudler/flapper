@@ -8,10 +8,13 @@ services:
     image: flapper_local
     container_name: flapper_local
     environment:
+      FLAPPER_VERSION: "docker-dev (not set)"
+      VERSION_FILE: "example.json"
       PATH_PREFIX: "/flipper/"
       O_VARIABLE_1: "bird"
       X_VARIABLE_2: "dolphin"
       O_VARIABLE_3: "bird.dolphin"
     ports:
       - "8080:8080"
-
+    volumes:
+      - ${PWD}/example.json:/example.json
