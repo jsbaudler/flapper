@@ -1,4 +1,4 @@
-FROM rust:1.67.0 as builder
+FROM rust:1 as builder
 
 ARG FLAPPER_VERSION
 ENV FLAPPER_VERSION = $FLAPPER_VERSION

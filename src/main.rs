@@ -163,31 +163,31 @@ mod tests {
 
     // test if the server starts and both endpoints work together
     #[actix_web::test]
-async fn test_server_startup() {
-    env::set_var("O_VARIABLE_1", "bird");
-    env::set_var("X_VARIABLE_2", "dolphin");
-    let mut app = test::init_service(
-        App::new()
-            .service(web::resource("/env").to(publish_envvars))
-            .service(web::resource("/version").to(publish_version))
-    )
-    .await;
-    
-    let req = test::TestRequest::get().uri("/env").to_request();
-    let resp = test::call_service(&mut app, req).await;
-    
-    assert!(resp.status().is_success());
-    let body = test::read_body(resp).await;
-    let body_str = std::str::from_utf8(&body).unwrap();
-    assert!(body_str.contains("[{\"name\":\"bird\",\"enabled\":true},{\"name\":\"dolphin\",\"enabled\":false}]"));
+    async fn test_server_startup() {
+        env::set_var("O_VARIABLE_1", "bird");
+        env::set_var("X_VARIABLE_2", "dolphin");
+        let mut app = test::init_service(
+            App::new()
+                .service(web::resource("/env").to(publish_envvars))
+                .service(web::resource("/version").to(publish_version))
+        )
+        .await;
+        
+        let req = test::TestRequest::get().uri("/env").to_request();
+        let resp = test::call_service(&mut app, req).await;
+        
+        assert!(resp.status().is_success());
+        let body = test::read_body(resp).await;
+        let body_str = std::str::from_utf8(&body).unwrap();
+        assert!(body_str.contains("[{\"name\":\"bird\",\"enabled\":true},{\"name\":\"dolphin\",\"enabled\":false}]"));
 
-    
-    let req = test::TestRequest::get().uri("/version").to_request();
-    let resp = test::call_service(&mut app, req).await;
-    
-    assert!(resp.status().is_success());
-    let body = test::read_body(resp).await;
-    let body_str = std::str::from_utf8(&body).unwrap();
-    assert!(body_str.contains("flapper_version"));
-}
+        
+        let req = test::TestRequest::get().uri("/version").to_request();
+        let resp = test::call_service(&mut app, req).await;
+        
+        assert!(resp.status().is_success());
+        let body = test::read_body(resp).await;
+        let body_str = std::str::from_utf8(&body).unwrap();
+        assert!(body_str.contains("flapper_version"));
+    }
 }
