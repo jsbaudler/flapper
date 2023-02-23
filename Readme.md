@@ -8,6 +8,12 @@ Flapper is a small tool to expose variables for dev environments with mocking as
 - It can expose a version file under `/version`.
 
 ## How to use
+The server exposes two HTTP endpoints:
+
+- ```/version```: returns a JSON object containing the application version and additional version information stored in a file. If the file is not found, a message is printed to the console.
+- ```/```: returns a JSON array of configuration objects, where each object contains an environment variable name and a boolean value indicating whether the variable name starts with "O_" or "X_".
+
+The code starts the server on 0.0.0.0:8080 and binds the two endpoints to the URL path specified by the PATH_PREFIX environment variable or the root URL path if not set. The publish_envvars function filters the environment variables based on their names and creates Config structs for each of them. The version function reads the version information from a JSON file and combines it with the Flapper version. The version file path and Flapper version are retrieved from the VERSION_PATH and FLAPPER_VERSION environment variables, respectively.
 
 ### Environment variables
 It must be configured via environment variables. Due to some limitations which require to allow non-conform ENV_VARS, the environment variables have to be set in a specific way where ```<ACTIVE_FLAG>_<NAME>="<internal_name>"```. The convention for that ENV strings may look weird, but it is made in that way to allow non-conform env vars set as keys.
