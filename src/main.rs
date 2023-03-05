@@ -1,5 +1,3 @@
-#![warn(clippy::all)]
-
 use actix_web::{middleware::Logger, web, App, HttpServer, Responder, Result};
 use env_logger::Env;
 use serde::Serialize;
@@ -33,7 +31,6 @@ async fn publish_version() -> Result<impl Responder> {
             log::error!("Failed to read version file: {}", e);
             actix_web::error::ErrorInternalServerError("Failed to read version file")
         })?;
-        serde_json::to_string(&version_file).unwrap();
         let version: HashMap<String, Value> = serde_json::from_str(&version_file).map_err(|e| {
             log::error!("Failed to parse version file: {}", e);
             actix_web::error::ErrorInternalServerError("Failed to parse version file")
@@ -79,16 +76,17 @@ async fn main() -> std::io::Result<()> {
 
     // read env var for path
     let env_var_prefix: String = env::var("ENV_VAR_PREFIX").unwrap_or_else(|_| "/env".to_string());
-    let version_prefix: String = env::var("VERSION_PREFIX").unwrap_or_else(|_| "/version".to_string());
-    
+    let version_prefix: String =
+        env::var("VERSION_PREFIX").unwrap_or_else(|_| "/version".to_string());
+
     // check that env_var_prefix and version_prefix are not equal
     if env_var_prefix == version_prefix {
         panic!("ENV_VAR_PREFIX and VERSION_PREFIX cannot be the same.");
     }
-    
+
     let port_str: String = env::var("SERVER_PORT").unwrap_or_else(|_| "8080".to_string());
     let port = match port_str.parse::<u16>() {
-        Ok(port) if (1..=65535).contains(&port)=> port,
+        Ok(port) if (1..=65535).contains(&port) => port,
         _ => {
             panic!(
                 "Invalid port number specified in SERVER_PORT environment variable: {}",
@@ -127,34 +125,31 @@ mod tests {
         env::set_var("O_VARIABLE_1", "bird");
         env::set_var("X_VARIABLE_2", "dolphin");
 
-        let mut app = test::init_service(
-            App::new()
-                .service(web::resource("/env").to(publish_envvars))
-        )
-        .await;
-        
+        let mut app =
+            test::init_service(App::new().service(web::resource("/env").to(publish_envvars))).await;
+
         let req = test::TestRequest::get().uri("/env").to_request();
         let resp = test::call_service(&mut app, req).await;
-        
+
         assert!(resp.status().is_success());
         let body = test::read_body(resp).await;
         let body_str = std::str::from_utf8(&body).unwrap();
         println!("{body_str}");
-        assert!(body_str.contains("[{\"name\":\"bird\",\"enabled\":true},{\"name\":\"dolphin\",\"enabled\":false}]"));
+        assert!(body_str.contains(
+            "[{\"name\":\"bird\",\"enabled\":true},{\"name\":\"dolphin\",\"enabled\":false}]"
+        ));
     }
 
     // test if the version endpoint works
     #[actix_web::test]
     async fn test_version() {
-        let mut app = test::init_service(
-            App::new()
-                .service(web::resource("/version").to(publish_version))
-        )
-        .await;
-        
+        let mut app =
+            test::init_service(App::new().service(web::resource("/version").to(publish_version)))
+                .await;
+
         let req = test::TestRequest::get().uri("/version").to_request();
         let resp = test::call_service(&mut app, req).await;
-        
+
         assert!(resp.status().is_success());
         let body = test::read_body(resp).await;
         let body_str = std::str::from_utf8(&body).unwrap();
@@ -169,25 +164,27 @@ mod tests {
         let mut app = test::init_service(
             App::new()
                 .service(web::resource("/env").to(publish_envvars))
-                .service(web::resource("/version").to(publish_version))
+                .service(web::resource("/version").to(publish_version)),
         )
         .await;
-        
+
         let req = test::TestRequest::get().uri("/env").to_request();
         let resp = test::call_service(&mut app, req).await;
-        
+
         assert!(resp.status().is_success());
         let body = test::read_body(resp).await;
         let body_str = std::str::from_utf8(&body).unwrap();
-        assert!(body_str.contains("[{\"name\":\"bird\",\"enabled\":true},{\"name\":\"dolphin\",\"enabled\":false}]"));
+        assert!(body_str.contains(
+            "[{\"name\":\"bird\",\"enabled\":true},{\"name\":\"dolphin\",\"enabled\":false}]"
+        ));
 
-        
         let req = test::TestRequest::get().uri("/version").to_request();
         let resp = test::call_service(&mut app, req).await;
-        
+
         assert!(resp.status().is_success());
         let body = test::read_body(resp).await;
         let body_str = std::str::from_utf8(&body).unwrap();
         assert!(body_str.contains("flapper_version"));
     }
 }
+
