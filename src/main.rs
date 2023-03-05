@@ -16,8 +16,9 @@ struct Config {
 // expose version and flapper version
 async fn publish_version() -> Result<impl Responder> {
     // env vars
-    let flapper_version =
-        env::var("FLAPPER_VERSION").unwrap_or_else(|_| "0.0.0-dev (not set)".to_string());
+    let flapper_version = env::var("FLAPPER_VERSION")
+        .or_else(|_| env::var("CARGO_PKG_VERSION"))
+        .unwrap_or_else(|_| "0.0.0-dev (not set)".to_string());
     let version_file_path = env::var("VERSION_PATH").unwrap_or_else(|_| "example.json".to_string());
 
     // prepare flapper version
@@ -95,8 +96,13 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
+    // set the flapper version
+    let flapper_version = env::var("FLAPPER_VERSION")
+        .or_else(|_| env::var("CARGO_PKG_VERSION"))
+        .unwrap_or_else(|_| "0.0.0-dev (not set)".to_string());
+
     // print out some basic info about the server
-    log::info!("Starting Flapper");
+    log::info!("Starting Flapper v{flapper_version}");
     log::info!("Serving at 0.0.0.0:{port}");
     log::info!("Serving environment variables at {env_var_prefix}");
     log::info!("Serving version at {version_prefix}");
@@ -187,4 +193,3 @@ mod tests {
         assert!(body_str.contains("flapper_version"));
     }
 }
-
